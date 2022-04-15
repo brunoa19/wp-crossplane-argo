@@ -1,0 +1,70 @@
+apiVersion: shipa.crossplane.io/v1alpha1
+kind: Volume
+metadata:
+  name: mysql-vol1
+spec:
+  forProvider:
+    name: mysql-vol
+    capacity: 10G
+    accessModes: ReadWriteOnce
+    plan: gke-appcluster-1
+
+--- 
+
+apiVersion: shipa.crossplane.io/v1alpha1
+kind: Volume
+metadata:
+  name: wordpress-vol
+spec:
+  forProvider:
+    name: wordpress-data
+    capacity: 1G
+    accessModes: ReadWriteOnce
+    plan: gke-appcluster-1
+
+---
+
+
+apiVersion: shipa.crossplane.io/v1alpha1
+kind: AppDeploy
+metadata:
+  name: mysql-db
+spec:
+  forProvider:
+    app: mysql-db
+    image: "docker.io/mysql:5.6"
+    appConfig:
+      team: shipa-team
+      framework: wordpress-dev
+      env:
+        - MYSQL_ROOT_PASSWORD=somewordpress
+        - MYSQL_DATABASE=wordpress
+        - MYSQL_USER=wordpress
+        - MYSQL_PASSWORD=wordpress
+    volumes:
+      - mountPath: "/var/lib/mysql"
+        name: mysql-vol
+
+---
+
+apiVersion: shipa.crossplane.io/v1alpha1
+kind: AppDeploy
+metadata:
+  name: wordpress
+spec:
+  forProvider:
+    app: wordpress
+    image: "docker.io/wordpress:latest"
+    appConfig:
+      team: shipa-team
+      framework: wordpress-dev
+      env:
+        - WORDPRESS_DB_HOST=app-mysql-db.shipa-wordpress-dev.svc
+        - WORDPRESS_DB_USER=wordpress
+        - WORDPRESS_DB_PASSWORD=wordpress
+        - WORDPRESS_DB_NAME=wordpress
+    port:
+      number: 80
+    volumes:
+      - mountPath: "/var/www/html"
+        name: wordpress-data
