@@ -4,8 +4,7 @@ metadata:
   name: wordpress
 spec:
   destination:
-    name: ''
-    namespace: ''
+    namespace: default
     server: 'https://kubernetes.default.svc'
   source:
     path: app-definition
